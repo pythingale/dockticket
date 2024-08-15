@@ -10,6 +10,12 @@ from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView
 from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework.routers import DefaultRouter
+from tickets.views import TicketViewSet
+
+router = DefaultRouter()
+router.register(r"api/get-ticket", TicketViewSet, basename="ticket")
+
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
@@ -44,7 +50,8 @@ urlpatterns += [
         SpectacularSwaggerView.as_view(url_name="api-schema"),
         name="api-docs",
     ),
-]
+] + router.urls
+
 
 if settings.DEBUG:
     # This allows the error pages to be debugged during development, just visit
