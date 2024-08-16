@@ -16,15 +16,15 @@ class TicketSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = ["user_id", "doctor_id", "unique_code"]
 
-    def validate_user_id(self, value):
-        if not isinstance(value, int):
-            raise serializers.ValidationError("user_id must be an integer.")
-        return value
+    def validate(self, data):
+        user_id = data.get("user_id")
+        doctor_id = data.get("doctor_id")
 
-    def validate_doctor_id(self, value):
-        if not isinstance(value, int):
-            raise serializers.ValidationError("doctor_id must be an integer.")
-        return value
+        # Ensure the user doesn't already have an active ticket
+        if Ticket.objects.filter(user_id=user_id, day_schedule__doctor_id=doctor_id, expired=False, canceled=False).exists():
+            raise serializers.ValidationError("An active ticket already exists for this user with this doctor.")
+
+        return data
 
     def create(self, validated_data):
         user_id = validated_data.get("user_id")
@@ -53,4 +53,4 @@ class TicketSerializer(serializers.ModelSerializer):
                 return ticket
 
         # If no slots are available for the current week
-        raise serializers.ValidationError("No available slots for this doctor this week.")
+        raise serializers.ValidationError("The doctor's capacity is full. Please try again later.")
